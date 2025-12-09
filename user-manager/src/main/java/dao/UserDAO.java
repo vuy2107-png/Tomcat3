@@ -6,7 +6,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class UserDAO implements IUserDAO{
+public class UserDAO implements IUserDAO {
     private String jdbcURL = "jdbc:mysql://localhost:3306/demo?useSSL=false&allowPublicKeyRetrieval=true";
     private String jdbcUsername = "root";
     private String jdbcPassword = "123456";
@@ -124,104 +124,85 @@ public class UserDAO implements IUserDAO{
         return rowUpdated;
     }
 
-    private void printSQLException(SQLException ex) {
-        for (Throwable e : ex) {
-            if (e instanceof SQLException) {
-                e.printStackTrace(System.err);
-                System.err.println("SQLState: " + ((SQLException) e).getSQLState());
-                System.err.println("Error Code: " + ((SQLException) e).getErrorCode());
-                System.err.println("Message: " + e.getMessage());
-                Throwable t = ex.getCause();
-                while (t != null) {
-                    System.out.println("Cause: " + t);
-                    t = t.getCause();
-                }
-            }
-        }
-    }
-
-    public List<User> searchByCountry(String country) {
-        List<User> users = new ArrayList<>();
-        String query = "SELECT * FROM users WHERE country LIKE ?";
-
-        try (Connection connection = getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
-
-            preparedStatement.setString(1, "%" + country + "%");
-
-            ResultSet rs = preparedStatement.executeQuery();
-
-            while (rs.next()) {
-                int id = rs.getInt("id");
-                String name = rs.getString("name");
-                String email = rs.getString("email");
-                String userCountry = rs.getString("country");
-                users.add(new User(id, name, email, userCountry));
-            }
-        } catch (SQLException e) {
-            printSQLException(e);
-        }
-        return users;
-    }
-
-    public List<User> sortByName() {
-        List<User> users = new ArrayList<>();
-        String query = "SELECT * FROM users ORDER BY name ASC";
-
-        try (Connection connection = getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
-
-            ResultSet rs = preparedStatement.executeQuery();
-
-            while (rs.next()) {
-                int id = rs.getInt("id");
-                String name = rs.getString("name");
-                String email = rs.getString("email");
-                String country = rs.getString("country");
-                users.add(new User(id, name, email, country));
-            }
-        } catch (SQLException e) {
-            printSQLException(e);
-        }
-        return users;
-    }
+    @Override
 
     public User getUserById(int id) {
+
         User user = null;
+
         String query = "{CALL get_user_by_id(?)}";
 
+        // Step 1: Establishing a Connection
+
         try (Connection connection = getConnection();
-             CallableStatement callableStatement = connection.prepareCall(query)) {
+
+             // Step 2:Create a statement using connection object
+
+             CallableStatement callableStatement = connection.prepareCall(query);) {
+
             callableStatement.setInt(1, id);
+
+            // Step 3: Execute the query or update query
+
             ResultSet rs = callableStatement.executeQuery();
 
+            // Step 4: Process the ResultSet object.
+
             while (rs.next()) {
+
                 String name = rs.getString("name");
+
                 String email = rs.getString("email");
+
                 String country = rs.getString("country");
+
                 user = new User(id, name, email, country);
+
             }
+
         } catch (SQLException e) {
+
             printSQLException(e);
+
         }
+
         return user;
+
     }
+
+
+    @Override
 
     public void insertUserStore(User user) throws SQLException {
+
         String query = "{CALL insert_user(?,?,?)}";
 
+        // try-with-resource statement will auto close the connection.
+
         try (Connection connection = getConnection();
+
              CallableStatement callableStatement = connection.prepareCall(query);) {
+
             callableStatement.setString(1, user.getName());
+
             callableStatement.setString(2, user.getEmail());
+
             callableStatement.setString(3, user.getCountry());
+
             System.out.println(callableStatement);
+
             callableStatement.executeUpdate();
+
         } catch (SQLException e) {
+
             printSQLException(e);
+
         }
+
     }
 
+
+    @Override
     public void addUserTransaction(User user, List<Integer> permissions) {
         Connection conn = null;
         // for insert a new user
@@ -286,6 +267,22 @@ public class UserDAO implements IUserDAO{
                 if (conn != null) conn.close();
             } catch (SQLException e) {
                 System.out.println(e.getMessage());
+            }
+        }
+    }
+
+    private void printSQLException(SQLException ex) {
+        for (Throwable e : ex) {
+            if (e instanceof SQLException) {
+                e.printStackTrace(System.err);
+                System.err.println("SQLState: " + ((SQLException) e).getSQLState());
+                System.err.println("Error Code: " + ((SQLException) e).getErrorCode());
+                System.err.println("Message: " + e.getMessage());
+                Throwable t = ex.getCause();
+                while (t != null) {
+                    System.out.println("Cause: " + t);
+                    t = t.getCause();
+                }
             }
         }
     }

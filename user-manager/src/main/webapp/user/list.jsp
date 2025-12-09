@@ -10,7 +10,7 @@
 <center>
     <h1>User Management</h1>
     <h2>
-        <a href="/users?action=create">Add New User</a>
+        <a href="users?action=create">Add New User</a>
     </h2>
 </center>
 
@@ -21,7 +21,7 @@
         <input type="text" name="country" placeholder="Search by country" />
         <button type="submit">Search</button>
     </form>
-    
+
     <br>
     <a href="/users?action=sort">Sort by Name</a>
 </div>
