@@ -21,8 +21,7 @@
         <input type="text" name="country" placeholder="Search by country" />
         <button type="submit">Search</button>
     </form>
-
-    <!-- 🔽 SORT BUTTON -->
+    
     <br>
     <a href="/users?action=sort">Sort by Name</a>
 </div>
