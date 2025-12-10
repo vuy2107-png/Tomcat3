@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="pbct">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../pbct/out/artifacts/pbct_jar/pbct.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
