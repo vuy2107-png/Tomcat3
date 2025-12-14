@@ -4,13 +4,14 @@ import model.Product;
 import java.util.List;
 
 public interface IProductDAO {
-    void addProduct(Product product) throws Exception;
 
-    List<Product> getAllProducts() throws Exception;
+    void addProduct(Product p);
 
-    Product getProductById(int id) throws Exception;
+    List<Product> getAllProducts();
 
-    void updateProduct(Product product) throws Exception;
+    Product getProductById(int id);
 
-    void deleteProduct(int id) throws Exception;
+    void updateProduct(Product p);
+
+    void deleteProduct(int id);
 }

@@ -1,0 +1,31 @@
+plugins {
+    id 'java'
+    id 'war'
+}
+
+group 'com.example'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Servlet API
+    providedCompile 'javax.servlet:javax.servlet-api:4.0.1'
+
+    // JSTL (cho c:forEach)
+    implementation 'org.glassfish.web:javax.servlet.jsp.jstl:1.2.5'
+
+    // MySQL Connector
+    implementation 'mysql:mysql-connector-java:8.0.33'
+
+    // Test
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+}
+
+// Cấu hình WAR (nếu cần thiết)
+war {
+    archiveFileName = "${project.name}-${version}.war"
+}

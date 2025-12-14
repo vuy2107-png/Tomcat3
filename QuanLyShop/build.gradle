@@ -1,32 +1,42 @@
 plugins {
-  id 'java'
-  id 'war'
+    id 'java'
+    id 'war'
 }
 
-group 'com.example'
-version '1.0-SNAPSHOT'
+group = 'com.example'
+version = '1.0-SNAPSHOT'
 
 repositories {
-  mavenCentral()
+    mavenCentral()
 }
 
 ext {
-  junitVersion = '5.10.2'
+    junitVersion = '5.10.2'
 }
 
 sourceCompatibility = '1.8'
 targetCompatibility = '1.8'
 
 tasks.withType(JavaCompile) {
-  options.encoding = 'UTF-8'
+    options.encoding = 'UTF-8'
 }
 
 dependencies {
-  compileOnly('javax.servlet:javax.servlet-api:4.0.1')
+    // Servlet API - chỉ dùng lúc compile, Tomcat tự cung cấp lúc chạy
+    compileOnly 'javax.servlet:javax.servlet-api:4.0.1'
 
-  testImplementation("org.junit.jupiter:junit-jupiter-api:${junitVersion}")
-  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
+    // JSTL đầy đủ (API + Impl)
+    implementation 'javax.servlet:jstl:1.2'
+    implementation 'org.glassfish.web:jstl-impl:1.2'
+
+    // MySQL
+    implementation 'mysql:mysql-connector-java:8.0.33'
+
+    // JUnit
+    testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
 }
 
 test {
-useJUnitPlatform()}
+    useJUnitPlatform()
+}
