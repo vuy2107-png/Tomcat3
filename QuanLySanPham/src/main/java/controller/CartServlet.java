@@ -1,99 +1,103 @@
 package controller;
 
-import dao.IProductDAO;
-import dao.ProductDAO;
 import model.CartItem;
 import model.Product;
+import service.IProductService;
+import service.ProductService;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import javax.servlet.http.*;
 import java.io.IOException;
-import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
-@WebServlet(urlPatterns = {"/cart", "/add-to-cart", "/update-cart", "/remove-from-cart"})
+@WebServlet("/cart")
 public class CartServlet extends HttpServlet {
+    private IProductService productService = new ProductService();
 
-    private final IProductDAO productDAO = new ProductDAO();
-
-    // Phương thức chính để lấy giỏ hàng từ Session
-    private Map<Integer, CartItem> getCart(HttpServletRequest request) {
-        HttpSession session = request.getSession(true);
-        // Giỏ hàng được lưu dưới dạng Map<ProductID, CartItem>
-        Map<Integer, CartItem> cart = (Map<Integer, CartItem>) session.getAttribute("cart");
-        if (cart == null) {
-            cart = new HashMap<>();
+    @SuppressWarnings("unchecked")
+    private List<CartItem> getCart(HttpSession session) {
+        Object o = session.getAttribute("cart");
+        if (o == null) {
+            List<CartItem> cart = new ArrayList<>();
             session.setAttribute("cart", cart);
+            return cart;
+        } else {
+            return (List<CartItem>) o;
         }
-        return cart;
     }
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String action = req.getParameter("action");
+        HttpSession session = req.getSession();
+        List<CartItem> cart = getCart(session);
 
-        // GET /cart: Hiển thị trang giỏ hàng
-        request.setAttribute("cartItems", getCart(request).values());
-        request.getRequestDispatcher("/cart.jsp").forward(request, response);
+        if (action == null || "view".equals(action)) {
+            req.getRequestDispatcher("/cart.jsp").forward(req, resp);
+            return;
+        }
+
+        if ("remove".equals(action)) {
+            try {
+                int id = Integer.parseInt(req.getParameter("id"));
+                cart.removeIf(ci -> ci.getProduct().getId() == id);
+            } catch (NumberFormatException ignored) {
+            }
+            resp.sendRedirect(req.getContextPath() + "/cart");
+            return;
+        }
+
+        if ("update".equals(action)) {
+            for (CartItem ci : new ArrayList<>(cart)) {
+                String param = "quantity_" + ci.getProduct().getId();
+                String qS = req.getParameter(param);
+                if (qS != null) {
+                    try {
+                        int q = Integer.parseInt(qS);
+                        if (q <= 0) cart.remove(ci);
+                        else if (q <= ci.getProduct().getQuantity()) ci.setQuantity(q);
+                        else ci.setQuantity(ci.getProduct().getQuantity());
+                    } catch (Exception e) {
+                    }
+                }
+            }
+            resp.sendRedirect(req.getContextPath() + "/cart");
+        }
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-
-        String servletPath = request.getServletPath();
-
-        try {
-            if ("/add-to-cart".equals(servletPath)) {
-                addToCart(request, response);
-            } else if ("/update-cart".equals(servletPath)) {
-                updateCart(request, response);
-            } else if ("/remove-from-cart".equals(servletPath)) {
-                removeFromCart(request, response);
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String action = req.getParameter("action");
+        if ("add".equals(action)) {
+            int id;
+            try {
+                id = Integer.parseInt(req.getParameter("id"));
+            } catch (NumberFormatException nfe) {
+                resp.sendRedirect(req.getContextPath() + "/product");
+                return;
             }
-        } catch (SQLException e) {
-            throw new ServletException("Database error in CartServlet", e);
-        }
-    }
 
-    private void addToCart(HttpServletRequest request, HttpServletResponse response)
-            throws SQLException, IOException {
+            HttpSession session = req.getSession();
+            List<CartItem> cart = getCart(session);
 
-        int productId = Integer.parseInt(request.getParameter("productId"));
-        int quantity = 1; // Mặc định thêm 1 sản phẩm
-
-        Map<Integer, CartItem> cart = getCart(request);
-        Optional<Product> productOpt = productDAO.getProductById(productId);
-
-        if (productOpt.isPresent()) {
-            Product product = productOpt.get();
-            if (cart.containsKey(productId)) {
-                // Sản phẩm đã có: Tăng số lượng
-                CartItem item = cart.get(productId);
-                item.setQuantity(item.getQuantity() + quantity);
-            } else {
-                // Sản phẩm chưa có: Thêm mới
-                cart.put(productId, new CartItem(product, quantity));
+            Product p = productService.getById(id);
+            if (p != null && p.getQuantity() > 0) {
+                boolean found = false;
+                for (CartItem it : cart) {
+                    if (it.getProduct().getId() == p.getId()) {
+                        if (it.getQuantity() < p.getQuantity()) {
+                            it.setQuantity(it.getQuantity() + 1);
+                        }
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found && p.getQuantity() > 0) {
+                    cart.add(new CartItem(p, 1));
+                }
             }
+            resp.sendRedirect(req.getContextPath() + "/product?success=added");
         }
-        // Chuyển hướng về trang giỏ hàng
-        response.sendRedirect(request.getContextPath() + "/cart");
-    }
-
-    // Cần thêm các phương thức updateCart và removeFromCart (Tạm bỏ qua để tập trung vào Checkout)
-    private void updateCart(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
-        // ... (Logic cập nhật số lượng)
-    }
-
-    private void removeFromCart(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
-        // ... (Logic xóa sản phẩm khỏi giỏ)
     }
 }

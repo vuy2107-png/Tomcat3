@@ -1,71 +1,44 @@
 package controller;
 
-import dao.UserDAO;
 import model.User;
-import javax.servlet.ServletException;
+import service.IUserService;
+import service.UserService;
+
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import javax.servlet.http.*;
+import javax.servlet.*;
 import java.io.IOException;
-import java.sql.SQLException;
-import java.util.Optional;
 
 @WebServlet("/login")
 public class LoginServlet extends HttpServlet {
-    private final UserDAO userDAO = new UserDAO();
+    private IUserService userService = new UserService();
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-
-        String successMessage = (String) request.getSession().getAttribute("successMessage");
-        if (successMessage != null) {
-            request.setAttribute("successMessage", successMessage);
-            request.getSession().removeAttribute("successMessage");
-        }
-
-        request.getRequestDispatcher("/client/login.jsp").forward(request, response);
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        req.getRequestDispatcher("login.jsp").forward(req, resp);
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String email = req.getParameter("email");
+        String pass = req.getParameter("password");
 
-        request.setCharacterEncoding("UTF-8");
-        String email = request.getParameter("email");
-        String password = request.getParameter("password");
+        User u = userService.login(email, pass);
 
-        try {
-            // Khắc phục lỗi: getUserByEmailAndPassword()
-            Optional<User> userOptional = userDAO.getUserByEmailAndPassword(email, password);
+        if (u != null) {
+            HttpSession session = req.getSession();
+            session.setAttribute("user", u);
 
-            if (userOptional.isPresent()) {
-                User user = userOptional.get();
-
-                // 1. Tạo Session
-                HttpSession session = request.getSession();
-                session.setAttribute("currentUser", user);
-                session.setAttribute("userRole", user.getRoleId());
-
-                // 2. Điều hướng (Role 1 là Admin)
-                if (user.getRoleId() == 1) {
-                    response.sendRedirect(request.getContextPath() + "/admin/dashboard");
-                    return; // <--- Đã BỔ SUNG: KẾT THÚC LUỒNG XỬ LÝ
-                } else {
-                    response.sendRedirect(request.getContextPath() + "/");
-                    return; // <--- Đã BỔ SUNG: KẾT THÚC LUỒNG XỬ LÝ
-                }
+            // 🔹 Kiểm tra role và chuyển hướng phù hợp
+            if ("admin".equalsIgnoreCase(u.getRole())) {
+                resp.sendRedirect("admin");
             } else {
-                // Đăng nhập thất bại (chuyển về trang cũ)
-                request.setAttribute("error", "Email hoặc mật khẩu không chính xác.");
-                request.getRequestDispatcher("/client/login.jsp").forward(request, response);
+                resp.sendRedirect("product"); // Trang sản phẩm cho user
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            request.setAttribute("error", "Lỗi hệ thống: " + e.getMessage());
-            request.getRequestDispatcher("/client/login.jsp").forward(request, response);
+
+        } else {
+            req.setAttribute("error", "Email hoặc mật khẩu không đúng!");
+            req.getRequestDispatcher("login.jsp").forward(req, resp);
         }
     }
 }

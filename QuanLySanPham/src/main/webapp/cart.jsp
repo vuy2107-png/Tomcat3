@@ -1,56 +1,76 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page import="java.util.List" %>
+<%@ page import="model.CartItem" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<html>
+<head>
+    <title>Giỏ hàng</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container mt-4">
+    <h3>Giỏ hàng của bạn</h3>
 
-<h2>Giỏ hàng của bạn</h2>
+    <c:if test="${empty cart}">
+        <p>Giỏ hàng trống.</p>
+        <a href="${pageContext.request.contextPath}/product" class="btn btn-primary">Tiếp tục mua sắm</a>
+    </c:if>
 
-<c:if test="${empty cartItems}">
-    <p>Giỏ hàng của bạn đang trống.</p>
-    <p><a href="${pageContext.request.contextPath}/">Tiếp tục mua sắm</a></p>
-</c:if>
+    <c:if test="${not empty cart}">
+        <form action="${pageContext.request.contextPath}/cart" method="get">
+            <input type="hidden" name="action" value="update">
+            <table class="table table-bordered">
+                <thead>
+                <tr>
+                    <th>Sản phẩm</th>
+                    <th>Giá</th>
+                    <th>Số lượng</th>
+                    <th>Tổng</th>
+                    <th>Hành động</th>
+                </tr>
+                </thead>
+                <tbody>
+                <c:set var="totalPrice" value="0" scope="page"/>
+                <c:forEach var="ci" items="${cart}">
+                    <tr>
+                        <td>${ci.product.name}</td>
+                        <td>${ci.product.price}</td>
+                        <td>
+                            <input type="number" name="quantity_${ci.product.id}" value="${ci.quantity}" min="1" max="${ci.product.quantity}" class="form-control" style="width:80px;">
+                        </td>
+                        <td>
+                                ${ci.product.price * ci.quantity}
+                            <c:set var="totalPrice" value="${totalPrice + (ci.product.price * ci.quantity)}"/>
+                        </td>
+                        <td>
+                            <a href="${pageContext.request.contextPath}/cart?action=remove&id=${ci.product.id}" class="btn btn-danger btn-sm" onclick="return confirm('Xóa sản phẩm?')">Xóa</a>
+                        </td>
+                    </tr>
+                </c:forEach>
+                </tbody>
+                <tfoot>
+                <tr>
+                    <th colspan="3" class="text-end">Tổng tiền:</th>
+                    <th colspan="2">${totalPrice} VND</th>
+                </tr>
+                </tfoot>
+            </table>
+            <button type="submit" class="btn btn-success">Cập nhật giỏ hàng</button>
+            <a href="${pageContext.request.contextPath}/product" class="btn btn-primary">Tiếp tục mua sắm</a>
+            <a href="${pageContext.request.contextPath}/order" class="btn btn-warning">Đặt hàng</a>
+        </form>
+    </c:if>
+</div>
+<!-- Footer -->
+<footer class="bg-dark text-white text-center py-3" style="position: fixed; bottom: 0; width: 100%; z-index: 1000;">
+    <div class="container">
+        © 2025 Shop Online. All rights reserved. |
+        <a href="#" class="text-white text-decoration-none">Liên hệ</a> |
+        <a href="#" class="text-white text-decoration-none">Facebook</a> |
+        <a href="#" class="text-white text-decoration-none">Instagram</a>
+    </div>
+</footer>
 
-<c:if test="${not empty cartItems}">
-    <table border="1">
-        <thead>
-        <tr>
-            <th>Sản phẩm</th>
-            <th>Giá</th>
-            <th>Số lượng</th>
-            <th>Thành tiền</th>
-            <th>Xóa</th>
-        </tr>
-        </thead>
-        <tbody>
-        <c:set var="total" value="0"/>
-        <c:forEach var="item" items="${cartItems}">
-            <tr>
-                <td>${item.product.name}</td>
-                <td><fmt:formatNumber value="${item.product.price}" type="currency" currencySymbol="VND"/></td>
-                <td>
-                        ${item.quantity}
-                        <%-- Thêm form update ở đây --%>
-                </td>
-                <td><fmt:formatNumber value="${item.subTotal}" type="currency" currencySymbol="VND"/></td>
-                <td>
-                    <a href="${pageContext.request.contextPath}/remove-from-cart?productId=${item.product.id}">Xóa</a>
-                </td>
-            </tr>
-            <c:set var="total" value="${total + item.subTotal}"/>
-        </c:forEach>
-        </tbody>
-        <tfoot>
-        <tr>
-            <td colspan="3" align="right"><strong>Tổng cộng:</strong></td>
-            <td><strong><fmt:formatNumber value="${total}" type="currency" currencySymbol="VND"/></strong></td>
-            <td></td>
-        </tr>
-        </tfoot>
-    </table>
-
-    <p style="margin-top: 20px;">
-            <%-- Nút Checkout sẽ chuyển hướng đến Servlet xử lý thanh toán --%>
-        <a href="${pageContext.request.contextPath}/checkout" style="padding: 10px; background-color: blue; color: white; text-decoration: none;">
-            Tiến hành Thanh toán
-        </a>
-    </p>
-</c:if>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

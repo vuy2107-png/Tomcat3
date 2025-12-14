@@ -1,71 +1,42 @@
 package controller;
 
-import dao.UserDAO;
 import model.User;
+import service.IUserService;
+import service.UserService;
+
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.*;
 import java.io.IOException;
-import java.sql.SQLException;
-import java.util.Optional;
 
 @WebServlet("/register")
 public class RegisterServlet extends HttpServlet {
-    private final UserDAO userDAO = new UserDAO();
+    private IUserService userService = new UserService();
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        request.getRequestDispatcher("/client/register.jsp").forward(request, response);
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        req.getRequestDispatcher("register.jsp").forward(req, resp);
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        req.setCharacterEncoding("UTF-8");
+        resp.setCharacterEncoding("UTF-8");
+        String name = req.getParameter("name");
+        String email = req.getParameter("email");
+        String password = req.getParameter("password");
 
-        request.setCharacterEncoding("UTF-8");
+        User u = new User();
+        u.setName(name);
+        u.setEmail(email);
+        u.setPassword(password);
 
-        String email = request.getParameter("email");
-        String password = request.getParameter("password");
-        String name = request.getParameter("name");
-
-        String message = "";
-
-        try {
-            // Kiểm tra Email đã tồn tại
-            if (userDAO.isEmailExists(email)) {
-                message = "Email này đã được sử dụng. Vui lòng chọn email khác.";
-                request.setAttribute("error", message);
-                request.setAttribute("name", name);
-                request.setAttribute("email", email);
-                request.getRequestDispatcher("/client/register.jsp").forward(request, response);
-                return;
-            }
-
-            // Tạo đối tượng User - Đã KHẮC PHỤC LỖI CONSTRUCTOR
-            // roleId = 2 cho Khách hàng thông thường (Giả định)
-            User newUser = new User(email, password, name, 2, true);
-
-            // Lưu vào Database
-            Optional<Integer> newId = userDAO.insertUser(newUser);
-
-            if (newId.isPresent()) {
-                message = "Đăng ký thành công! Vui lòng đăng nhập.";
-                request.getSession().setAttribute("successMessage", message);
-                response.sendRedirect(request.getContextPath() + "/login");
-            } else {
-                message = "Đăng ký thất bại do lỗi hệ thống (Không lấy được ID).";
-                request.setAttribute("error", message);
-                request.getRequestDispatcher("/client/register.jsp").forward(request, response);
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            message = "Lỗi Database: " + e.getMessage();
-            request.setAttribute("error", message);
-            request.getRequestDispatcher("/client/register.jsp").forward(request, response);
+        boolean ok = userService.register(u);
+        if (ok) {
+            resp.sendRedirect("login");
+        } else {
+            req.setAttribute("error", "Đăng ký thất bại. Email có thể đã tồn tại.");
+            req.getRequestDispatcher("register.jsp").forward(req, resp);
         }
     }
 }
