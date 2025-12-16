@@ -1,0 +1,42 @@
+plugins {
+    id 'java'
+    id 'war'
+}
+
+group 'com.example'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    servletApiVersion = '4.0.1'
+    junitVersion = '5.10.2'
+}
+
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
+
+dependencies {
+    // Servlet API, Tomcat sẽ cung cấp, không đóng gói
+    compileOnly "javax.servlet:javax.servlet-api:${servletApiVersion}"
+
+    // JSTL 1.2 chuẩn, sẽ được đóng gói vào WAR
+    implementation 'javax.servlet:jstl:1.2'
+
+    // MySQL connector
+    implementation 'mysql:mysql-connector-java:8.0.33'
+
+    // Test JUnit
+    testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+test {
+    useJUnitPlatform()
+}

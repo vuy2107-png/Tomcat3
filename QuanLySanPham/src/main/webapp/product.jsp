@@ -104,7 +104,7 @@
             <div class="col-lg-6 col-md-12 mb-4">
                 <h5 class="text-uppercase">Shop Online</h5>
                 <p>
-                    Shop mình cần tuyển người MUA, không yêu cầu bằng cấp, chỉ cần có tiền là được ạ.
+                    Hỗ trợ đổi trả trong 1 tuần đầu tiên.
                 </p>
             </div>
             <div class="col-lg-3 col-md-6 mb-4">
@@ -112,7 +112,7 @@
                 <ul class="list-unstyled mb-0">
                     <li>📞 0123-456-789</li>
                     <li>✉️ support@shop.com</li>
-                    <li>🏠 123 Đường ABC, TP.HN</li>
+                    <li>🏠 105 Bà Triệu, Hà Cầu, Hà Đông, TP.HN</li>
                 </ul>
             </div>
             <div class="col-lg-3 col-md-6 mb-4">
