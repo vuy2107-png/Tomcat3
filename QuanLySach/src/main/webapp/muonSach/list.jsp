@@ -19,8 +19,9 @@
         .tra-button:hover { background-color: #ec971f; }
     </style>
     <script>
-        function confirmTraSach(maMuonSachInt) {
-            var confirmed = confirm("Bạn có chắc chắn muốn trả sách này không?");
+        // SỬA ĐỔI HÀM JAVASCRIPT: Nhận thêm hoTen
+        function confirmTraSach(maMuonSachInt, hoTen) {
+            var confirmed = confirm("Học sinh " + hoTen + " thực hiện trả sách này không?");
             if (confirmed) {
                 // Sử dụng form ẩn để gửi POST request cho hành động Trả sách
                 var form = document.createElement('form');
@@ -86,8 +87,9 @@
                 </c:if>
             </td>
             <td>
+                    <%-- SỬA ĐỔI NÚT: Thêm ${t.hoTen} vào onclick --%>
                 <button type="button" class="tra-button"
-                        onclick="confirmTraSach(${t.maMuonSachInt})">
+                        onclick="confirmTraSach(${t.maMuonSachInt}, '${t.hoTen}')">
                     Trả sách
                 </button>
             </td>
